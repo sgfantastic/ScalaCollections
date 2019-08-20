@@ -19,6 +19,17 @@ object HOFsCurries extends App {
   val supFunc: ((Int => Int), Int) =>(Int => Int) =
     (f: Int => Int, n: Int) =>   if (n <= 0) (x: Int) => x
     else (x: Int) => nTimesBetter(f,n-1)(f(x))
+  
+  val d: (Int => Boolean)  = (x: Int) => x > 10
+
+  val dd: (String, (Int => Boolean)) => Int = (x: String, f: Int => Boolean) => if (f(x.toInt)) 20 else 30
+
+  println("d= " + dd("20", d(_)))
+  val nxtAdder: (Int, Int) => (Int => Int) = (x: Int, y: Int) => (z: Int) => x + y + z
+  println("nextAdder= " + nxtAdder(1,2)(3))
+  
+  val superFunction: (Int, (String,(Int => Boolean))=> Int) => (Int => Int) =
+    (a: Int, f:(String,(Int => Boolean))=> Int ) => (z: Int) => dd((a+z).toString, d(_))
 
 
   val plus10 = nTimesBetter(plusOne,10)
