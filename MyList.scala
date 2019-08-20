@@ -17,6 +17,15 @@ abstract class MyList[+A] {
   def ++[B >: A](list: MyList[B]): MyList[B]
 }
 
+object MyList{
+  def apply[A](values: A*) : MyList[A] = {
+    def buildList(valSeq: Seq[A], acc: MyList[A]): MyList[A] =
+      if (valSeq.isEmpty) acc
+      else buildList(valSeq.tail, acc add valSeq.head)
+    buildList(values.toSeq, Empty)
+  }
+}
+
 object Empty extends MyList[Nothing] {
   def head: Nothing = throw new NoSuchElementException
   def tail: MyList[Nothing] = throw new NoSuchElementException
@@ -91,5 +100,8 @@ object ListTest extends App {
   println((listOfIntegers.flatMap(new MyTransformer[Int, MyList[Int]] {
     override def transform(elem: Int): MyList[Int] = new Cons(elem, new Cons(elem + 1, Empty))
   })))
+  
+  val lst = List(1,2,3,4,5)
+  println(lst.toString)
 
 }
