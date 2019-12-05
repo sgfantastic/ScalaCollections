@@ -1,6 +1,5 @@
 package part1recap
 object BinaryTreeApp extends App{
-
   case class Node[A](v: A, l: Tree[A], r: Tree[A]) extends Tree[A]
   case class Leaf[A](v: A) extends Tree[A]
   case object Empty extends Tree[Nothing]
@@ -90,6 +89,33 @@ object BinaryTreeApp extends App{
     def nthInorder(n: Int) = toSeqInorder(n)
     def nthPostorder(n: Int) = toSeqPostorder(n)
     def nthLevelorder(n: Int) = toSeqLevelorder(n)
+
+    // Binary Search Pre-order
+    def searchPreorder[B >: A](key: B): Option[A] = {
+      def helperSearchPreorder(lst: Seq[A]): Option[A] = lst match {
+        case Seq() => None
+        case h :: tl =>
+          if (h == key) Some(h)
+          else helperSearchPreorder(tl)
+      }
+      helperSearchPreorder(this.toSeqPreorder)
+    }
+
+    def searchBTree[B >: A](seq: Seq[B], key: B) : Option[B] = seq match {
+      case Seq() => None
+      case h :: tl =>
+        if (h == key) Some(h)
+        else searchBTree(tl, key)
+    }
+
+     // Binary Search Pre-order
+   def searchBinaryTree[B >: A](traversalType: String, key: B): Option[B] = traversalType match {
+     case "Inorder" => searchBTree(this.toSeqInorder, key)
+     case "Postorder" => searchBTree(this.toSeqPostorder, key)
+     case "Preorder" => searchBTree(this.toSeqPreorder, key)
+     case "Levelorder" => searchBTree(this.toSeqLevelorder, key)
+     case _            => None
+   }
   }
 
   val t: Tree[Char] = Node('F', Node('B', Leaf('A'),Node('D', Leaf('C'), Leaf('E'))), Node('G', Empty, Node('I', Leaf('H'), Empty)))
@@ -118,10 +144,23 @@ object BinaryTreeApp extends App{
   println("last inorder: "+ t.lastInorder)
   println("last postorder: " + t.lastPostorder)
   println("last levelorder: "+ t.lastLevelorder)
-  
+
   println("nth preorder 5 : " + t.nthPreorder(5))
   println("nt inorder 5 : " + t.nthInorder(5))
   println("nth postorder 5 : " + t.nthPostorder(5))
   println("nth levelorder 5 : " + t.nthLevelorder(5))
-}
 
+  println(t.toSeq.reverse)
+
+  println(t.searchBinaryTree("Inorder",'A'))
+  println(t.searchBinaryTree("Inorder",'Z'))
+  
+  println(t.searchBinaryTree("Preorder",'B'))
+  println(t.searchBinaryTree("Preorder",'Z'))
+  
+  println(t.searchBinaryTree("Postorder",'C'))
+  println(t.searchBinaryTree("Postorder",'Z'))
+  
+  println(t.searchBinaryTree("Levelorder",'D'))
+  println(t.searchBinaryTree("Levelorder",'Z'))
+}
