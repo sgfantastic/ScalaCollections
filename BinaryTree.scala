@@ -90,17 +90,7 @@ object BinaryTreeApp extends App{
     def nthPostorder(n: Int) = toSeqPostorder(n)
     def nthLevelorder(n: Int) = toSeqLevelorder(n)
 
-    // Binary Search Pre-order
-    def searchPreorder[B >: A](key: B): Option[A] = {
-      def helperSearchPreorder(lst: Seq[A]): Option[A] = lst match {
-        case Seq() => None
-        case h :: tl =>
-          if (h == key) Some(h)
-          else helperSearchPreorder(tl)
-      }
-      helperSearchPreorder(this.toSeqPreorder)
-    }
-
+    // Binary Search In-order/Pre-order/Post-order/Level-order
     def searchBTree[B >: A](seq: Seq[B], key: B) : Option[B] = seq match {
       case Seq() => None
       case h :: tl =>
