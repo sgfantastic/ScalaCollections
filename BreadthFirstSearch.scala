@@ -16,9 +16,9 @@ object BreadthFirstSearch extends App{
 
     // add a seq to a seq
   def addSeqToSeq[V](seqTo: Seq[V])(seqFrom: Seq[V]): Seq[V] ={
-    seqFrom.foldLeft(seqTo)((st, t) =>{
-      if (st contains t) st
-      else st :+ t
+    seqFrom.foldLeft(seqTo)((seq, value) =>{
+      if (seq contains value) seq
+      else seq :+ value
     })
   }
 
@@ -32,6 +32,7 @@ object BreadthFirstSearch extends App{
       else seq :+ v
     })
 
+  // breadth first search
   def breadthFirstSearch[V](start: Seq[V], graph: Graph[V], visited: Seq[V] = Seq[V]()) : Seq[V] = {
     val getNext = getNeighbours(graph)(_)
     val newVisited = addSeqToSeq(visited)(start)
