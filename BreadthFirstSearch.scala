@@ -23,7 +23,7 @@ object BreadthFirstSearch extends App{
   }
 
   // get all the associated nodes
-  def getChild[V](graph: Graph[V])(node: V): Seq[V] = graph.neighbours(node)
+  def getNeighbours[V](graph: Graph[V])(node: V): Seq[V] = graph.neighbours(node)
 
   // filter seq from a seq
   def filterFromSeq[V](seqTo: Seq[V])(seqFrom: Seq[V]) : Seq[V] =
@@ -33,7 +33,7 @@ object BreadthFirstSearch extends App{
     })
 
   def breadthFirstSearch[V](start: Seq[V], graph: Graph[V], visited: Seq[V] = Seq[V]()) : Seq[V] = {
-    val getNext = getChild(graph)(_)
+    val getNext = getNeighbours(graph)(_)
     val newVisited = addSeqToSeq(visited)(start)
     val next = start.flatMap(getNext(_))
     if (next.isEmpty) newVisited
