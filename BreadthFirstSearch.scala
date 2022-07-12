@@ -54,7 +54,6 @@ object BreadthFirstSearch extends App{
     .addEdges("F", "A")
     .addEdges("D", "E")
 
-  println(graph.neighbours("A").flatMap(graph.neighbours(_)))
   println(breadthFirstSearch(Seq("A"), graph))
 
 }
