@@ -11,104 +11,100 @@ object DijktrasApp extends App {
   trait Graph[V] {
     def vertices: Seq[V] // vertices is just the node of the graph
     def edges: Seq[(V,V)] // an edge is a tuple of 2 vertices
-    def addEdge(a: V, weightedEdge: WeightedEdge[V]): Graph[V]
+    def addEdges(a: V, b: WeightedEdge[V]): Graph[V]
     def neighbours(vertex: V): Seq[WeightedEdge[V]]
   }
-
   object Graph{
     def apply[V](adjList: Map[V, Seq[WeightedEdge[V]]]): Graph[V] = new WeightedGraph[V](adjList)
-    def apply[V](): Graph[V] = new WeightedGraph(Map[V, Seq[WeightedEdge[V]]]())
+    def apply[V](): Graph[V] = new WeightedGraph[V](Map[V, Seq[WeightedEdge[V]]]())
   }
 
-  // Weighted Graph
-  class WeightedGraph[V](adjList: Map[V, Seq[WeightedEdge[V]]]) extends Graph[V]{
+  class WeightedGraph[V](adjList: Map[V, Seq[WeightedEdge[V]]]) extends Graph[V] {
     override def vertices: Seq[V] = adjList.keys.toList
 
     override def edges: Seq[(V, V)] = adjList.flatMap{case (v, edgeList) =>
       edgeList.map(e => v -> e.destination)
     }.toList
 
-    override def addEdge(a: V, weightedEdge: WeightedEdge[V]): Graph[V] = {
+    override def addEdges(a: V, weightedEdge: WeightedEdge[V]): Graph[V] = {
       val aNeighbour = weightedEdge +: adjList.getOrElse(a,Nil)
       new WeightedGraph(adjList + (a -> aNeighbour))
     }
 
-    override def neighbours(vertex: V): Seq[WeightedEdge[V]] = adjList.getOrElse(vertex, Nil)
+    override def neighbours(vertex: V): Seq[WeightedEdge[V]] = adjList.getOrElse(vertex,Nil)
   }
 
-  val g = Graph[String]()
-    .addEdge("A", WeightedEdge("B", 4))
-    .addEdge("A", WeightedEdge("C", 3))
-    .addEdge("B", WeightedEdge("C", 2))
-    .addEdge("B", WeightedEdge("E", 1))
-    .addEdge("B", WeightedEdge("G", 1))
-    .addEdge("C", WeightedEdge("D", 1))
-    .addEdge("D", WeightedEdge("G", 2))
-    .addEdge("E", WeightedEdge("F", 2))
-    .addEdge("G", WeightedEdge("F", 2))
-    .addEdge("G", WeightedEdge("H", 1))
-    .addEdge("F", WeightedEdge("H", 3))
+  // weighted graph
+  implicit val g = Graph[String]()
+    .addEdges("A", WeightedEdge("B", 4))
+    .addEdges("A", WeightedEdge("C", 3))
+    .addEdges("B", WeightedEdge("C", 2))
+    .addEdges("B", WeightedEdge("E", 1))
+    .addEdges("B", WeightedEdge("G", 1))
+    .addEdges("C", WeightedEdge("D", 1))
+    .addEdges("D", WeightedEdge("G", 2))
+    .addEdges("E", WeightedEdge("F", 2))
+    .addEdges("G", WeightedEdge("F", 2))
+    .addEdges("G", WeightedEdge("H", 1))
+    .addEdges("F", WeightedEdge("H", 3))
 
-  // Dijktra's Algorithm
-
-  case class Path[V](route: Seq[V] = Seq[V](), weight: Int = 0)
+  // Dijktras Algorithm
+  case class Path[V](route: Seq[V]= Seq[V](), weight: Int = 0 )
 
   // add a path to the seq of Paths
-  def addToPath[V](path: Seq[Path[V]], p: Path[V], acc: Seq[Path[V]]= Seq[Path[V]]()): Seq[Path[V]] = {
+  def addPathToRoute[V](path: Seq[Path[V]], p: Path[V], acc: Seq[Path[V]] = Seq[Path[V]]())
+                       (implicit grpah: Graph[V]): Seq[Path[V]] ={
     path match {
       case Nil =>
-        val dest = acc.map(_.route.last)
-        if (dest contains p.route.last) acc
+        if (acc.map(_.route.last) contains p.route.last) acc
         else acc :+ p
       case x :: xs if x.route.last == p.route.last =>
-        if (x.weight < p.weight) addToPath(xs, p, acc :+ x)
-        else addToPath(Nil, p, acc ++ xs :+ p)
-      case x :: xs => addToPath(xs, p, acc :+ x)
+        if (x.weight < p.weight) addPathToRoute(xs, p, acc :+ x)
+        else addPathToRoute(Nil, p, acc ++ xs :+ p)
+      case x :: xs => addPathToRoute(xs,p,acc :+ x)
     }
   }
 
-  def shortestPath[V](start: V, graph: Graph[V]): Seq[Path[V]] = {
+  // update Route or add new path
+  def updateRoute[V](neighbour: WeightedEdge[V], path: Seq[Path[V]], accPath: Seq[Path[V]])
+                    (implicit graph: Graph[V]): Seq[Path[V]] ={
+    path match {
+      case Nil => accPath
+      case x :: xs if graph.neighbours(x.route.last) contains neighbour =>
+        val newAccPath = addPathToRoute(accPath,
+          Path(x.route :+ neighbour.destination, x.weight + neighbour.weight))
+        updateRoute(neighbour, xs,newAccPath)
+      case _ :: xs => updateRoute(neighbour, xs, accPath)
+    }
+  }
+
+  // add neighbours to Route
+  def addNeighboursToRoute[V](allNeighbours: Seq[WeightedEdge[V]], path: Seq[Path[V]], accRoute: Seq[Path[V]])
+                             (implicit graph: Graph[V]): Seq[Path[V]] ={
+    allNeighbours match {
+      case Nil => accRoute
+      case x :: xs =>
+        val newPath = updateRoute(x,path,accRoute)
+        addNeighboursToRoute(xs,path,newPath)
+    }
+  }
+
+  // Dijktra's shortest path algorithm
+  def shortestPath[V](start: V)(implicit graph: Graph[V]): Seq[Path[V]] ={
     val startNeighbour = graph.neighbours(start)
-    val newPath = startNeighbour.foldLeft(Seq[Path[V]]())((path, n) =>
-      path :+ Path(Seq(start, n.destination), n.weight)
-    )
-
-    val newNeighbour = startNeighbour.foldLeft(Seq[WeightedEdge[V]]())((nn, n) =>
-      nn ++ graph.neighbours(n.destination)
-    )
-
-    def addNeighboursToPath(neighbour: Seq[WeightedEdge[V]] ,
-                            path: Seq[Path[V]] ): Seq[Path[V]] ={
+    val startPath = Path(Seq(start))
+    def shortestPathHelper(neighbour: Seq[WeightedEdge[V]], path: Seq[Path[V]]): Seq[Path[V]] ={
       neighbour match {
         case Nil => path
         case n =>
-          val newNeighbours = n.flatMap(node => graph.neighbours(node.destination))
-          def addNeighbour(nei: Seq[WeightedEdge[V]], accRoute: Seq[Path[V]]): Seq[Path[V]] ={
-            nei match {
-              case Nil => accRoute
-              case x :: xs =>
-                val newPath = updatePath(x,path,accRoute)
-                addNeighbour(xs, newPath)
-            }
-          }
-
-          def updatePath(n1: WeightedEdge[V], path: Seq[Path[V]], accPath: Seq[Path[V]])
-          : Seq[Path[V]] ={
-            path match {
-              case Nil => accPath
-              case x :: xs if graph.neighbours(x.route.last) contains n1=>
-                val newAccPath = addToPath(accPath, Path(x.route :+ n1.destination, x.weight + n1.weight))
-                updatePath(n1,xs,newAccPath)
-              case _ :: xs => updatePath(n1,xs, accPath)
-            }
-          }
-          addNeighboursToPath(newNeighbours, addNeighbour(n,path))
+          val newNeighbours = n.flatMap(t => graph.neighbours(t.destination))
+          shortestPathHelper(newNeighbours, addNeighboursToRoute(n,path,path))
       }
     }
-    addNeighboursToPath(newNeighbour, newPath)
+    shortestPathHelper(startNeighbour, Seq(startPath))
   }
 
-  val sp = shortestPath("A", g)
+  val sp = shortestPath("A")
   println(sp)
   println(sp.filter(_.route.last == "H"))
   println(sp.filter(_.route.last == "F"))
