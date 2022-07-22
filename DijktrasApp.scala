@@ -1,9 +1,9 @@
 package com.kanshu.functionalprogramming.sorting
 
-object DijktrasApp extends App {
+object DijkstrasApp extends App {
 
   /**
-   * Dijktras Algorithm with weighted graph
+   * Dijkstras Shortest Path Algorithm with weighted graph
    */
 
   case class WeightedEdge[V](destination: V, weight: Int)
