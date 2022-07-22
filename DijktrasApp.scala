@@ -43,7 +43,7 @@ object DijktrasApp extends App {
     .addEdges("B", WeightedEdge("G", 1))
     .addEdges("C", WeightedEdge("D", 1))
     .addEdges("D", WeightedEdge("G", 2))
-    .addEdges("E", WeightedEdge("F", 2))
+    .addEdges("E", WeightedEdge("F", 1))
     .addEdges("G", WeightedEdge("F", 2))
     .addEdges("G", WeightedEdge("H", 1))
     .addEdges("F", WeightedEdge("H", 3))
