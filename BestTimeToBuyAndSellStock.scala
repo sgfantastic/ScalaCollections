@@ -1,5 +1,7 @@
 package com.kanshu.datastructures
 
+import scala.annotation.tailrec
+
 object BestTimeToBuyAndSellStock extends App{
   /**
    * Given an array prices[] of length N, representing the prices of the stocks on different days,
@@ -14,6 +16,7 @@ object BestTimeToBuyAndSellStock extends App{
 // for one buy and sell calculate max profit
   private val prices = Seq(7,1,5,2,6,4)
 
+@tailrec
   private def maxProfit(prices: Seq[Int], buy: Int, mxProfit: Int = 0): Int ={
     prices match {
       case Nil => mxProfit
@@ -26,10 +29,12 @@ object BestTimeToBuyAndSellStock extends App{
     }
   }
 
-  println(maxProfit(prices,prices.head))
+//  println(maxProfit(prices,prices.head))
 
+  // for one buy and sell calculate max profit with positions(buy,sell)
   private val priceZip = prices.zipWithIndex
 
+  @tailrec
   private def maxProfitPos(prices: Seq[(Int, Int)],
                            buy: Int,
                            mxProfit: Int = 0,
@@ -55,12 +60,42 @@ object BestTimeToBuyAndSellStock extends App{
     }
   }
 
-  println(maxProfitPos(priceZip, priceZip.head._1))
+//  println(maxProfitPos(priceZip, priceZip.head._1))
+
+  // find the max possible profit with max possible trade
+  // find max possible trades - buy first , sell later
+  // find the max possible profit
 
 
+  private val priceList = Seq(7,1,5,2,6,4,3,9)
+  case class Trade(buy: Option[Int]= None, sell : Option[Int] = None, profit: Int = 0)
 
+  val tradeList = priceList.foldLeft(Seq[Trade]())((trades,price) =>{
+    trades match {
+      case Nil => Trade(Some(price)) +: trades
+      case trade :: rest =>
+        val buy = trade.buy
+        val sell = trade.sell
+        (buy,sell) match {
+          case(Some(b), Some(s)) =>
+            if (price > b & price > s) Trade(Some(b), Some(price), price-b) +: rest
+            else Trade(Some(price)) +: trades
 
+          case (Some(b) , None) =>
+            if(price > b) Trade(Some(b), Some(price), price-b) +: trades
+            else Trade(Some(price)) +: rest // 7, 1 => 1
 
+          case _ => Trade(Some(price)) +: trades
+        }
+    }
+  })
 
+  tradeList.foreach(println)
 
+  val maximumProfit = tradeList.map(_.profit).reduce(_ +_)
+
+  println(s"max profit is $maximumProfit")
+  val maxNoOfTrades = tradeList.filterNot(_.profit == 0).length
+
+  println(s"the max no of trades - $maxNoOfTrades")
 }
