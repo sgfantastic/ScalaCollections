@@ -98,4 +98,73 @@ object BestTimeToBuyAndSellStock extends App{
   val maxNoOfTrades = tradeList.filterNot(_.profit == 0).length
 
   println(s"the max no of trades - $maxNoOfTrades")
+
+    val tradesList = tradeList.filterNot(_.profit == 0).reverse
+  tradesList.foreach(println)
+
+  // find the max possible profit for k trades
+  // 1 < k < n
+  // n = max possible trade
+
+private def groupTrades(trdList: Seq[Trade], k: Int): Seq[Seq[Trade]] = {
+  val (first, rest) = trdList.splitAt(trdList.length - (k-1))
+  Seq(first) ++ rest.grouped(1)
+}
+
+  val testGrp = groupTrades(tradesList, 2)
+  testGrp.foreach(println)
+
+  private def reduceTrade(trades: Seq[Trade], ac: Trade = Trade(), tmp: Trade = Trade()): (Trade, Trade) = {
+    trades match {
+      case Nil => (ac, tmp)
+      case t :: rest =>
+        val Some(buy) = t.buy
+        val Some(sell) = t.sell
+        val profit = t.profit
+        (ac, tmp, t) match {
+          case (Trade(None, None, 0), Trade(None, None, 0), t) => reduceTrade(rest, t, Trade())
+
+          case (Trade(Some(b), Some(s), p), Trade(None, None, 0), t) =>
+            if (b < buy & s > sell) reduceTrade(rest, ac, t)
+            else if (b < buy & s <= sell) reduceTrade(rest, Trade(Some(b), Some(sell), sell - b))
+            else if (b >= buy & s > sell & p > profit) reduceTrade(rest, ac, t)
+            else reduceTrade(rest, t)
+
+          case (Trade(Some(b), Some(s), p), Trade(Some(tb), Some(ts), tp), t) =>
+            if (b < buy & s > sell) {
+              if (tb <= buy & ts >= sell) reduceTrade(rest, ac, tmp)
+              else if (tb <= buy & ts < sell) reduceTrade(rest, ac, Trade(Some(tb), Some(sell), sell - tb))
+              else if (tb > buy & ts > sell & tp > profit) reduceTrade(rest, ac, tmp)
+              else reduceTrade(rest, ac, t)
+            }
+            else if (b < buy & s <= sell) reduceTrade(rest, Trade(Some(b), Some(sell), sell - b))
+            else if (b >= buy & s > sell & p > profit) {
+              if (tb < buy & ts > sell) reduceTrade(rest, ac, tmp)
+              else if (tb < buy & ts <= sell) reduceTrade(rest, ac, Trade(Some(tb), Some(sell), sell - tb))
+              else if (tb > buy & ts > sell & tp > profit) reduceTrade(rest, ac, tmp)
+              else reduceTrade(rest, ac, t)
+            }
+            else reduceTrade(rest, t)
+        }
+    }
+
+    }
+
+  private def getMaxProfitWithKTrades(trades: Seq[Trade], k : Int): Seq[Trade] = {
+    if (k >= trades.length) trades
+    else {
+      val grpsTrade = groupTrades(trades, k)
+      grpsTrade.foldLeft(Seq[Trade](), Trade())((tradesTuple, trd) => {
+        val (trades, tmpTrd) = tradesTuple
+        val (res, tmp) = if (tmpTrd == Trade()) reduceTrade(trd)
+        else reduceTrade(tmpTrd +: trd)
+        (trades :+ res, tmp)
+      })._1
+    }
+  }
+
+  val maxProfitKTrades = getMaxProfitWithKTrades(tradesList, 2)
+  println("******")
+  maxProfitKTrades.foreach(println)
+
 }
