@@ -22,12 +22,12 @@ object KafkAkkaConsumerApp {
     // Define Kafka consumer settings
     val consumerSettings: ConsumerSettings[String, String] =
       ConsumerSettings(system, new StringDeserializer, new StringDeserializer)
-        .withBootstrapServers("fcrdlkafka-lb.dev.calix.com:9092") // Kafka broker address
+        .withBootstrapServers("<broker>") // Kafka broker address
         .withGroupId("my-group") // Consumer group
         .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest") // Start from the beginning of the topic
 
     // Define the Kafka topic you want to consume from
-    val kafkaTopic = "SubscriberTest"
+    val kafkaTopic = "<topic>"
 
     // Create a Kafka source
     val kafkaSource: Source[ConsumerRecord[String, String], Consumer.Control] =
