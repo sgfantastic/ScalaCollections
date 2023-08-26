@@ -15,8 +15,8 @@ object GraphGeneric extends App{
    *                    4   5
    *
    *
-   *  bfs - 0, 2, 1, 3, 5, 4 time complexity - O(V + E) space complexity - O(V)
-   *  dfs - 1, 4, 5, 3, 2, 0
+   *  bfs - 0,1,2,3,4,5 time complexity - O(V + E) space complexity - O(V)
+   *  dfs - 0,1,3,4,5,2 time complexity - O(V + E) space complexity - O(V)
    */
 
   trait Graph[V]{
@@ -38,7 +38,7 @@ object GraphGeneric extends App{
       .flatMap{case(v,neighbour) => neighbour.map((_,v))}.toSeq
 
     override def addEdges(a: V, b: V): Graph[V] = {
-      val aNeighbour = b +: neighbours(a)
+      val aNeighbour = neighbours(a) :+ b
       new DirectedGraph(adjList + (a -> aNeighbour))
     }
 
@@ -70,12 +70,22 @@ object GraphGeneric extends App{
 
   println(bfs(g, 0))
 
+private def dfs[V](graph: Graph[V], start: V): Seq[V] = {
+  def dfsHelper(stack: Seq[V], visited: Set[V] = Set[V](), acc: Seq[V] = Nil): Seq[V] = {
+    stack match {
+      case Nil => acc
+      case head :: tail =>
+        if(visited contains head) dfsHelper(tail, visited, acc)
+        else {
+          val neighbours = graph.neighbours(head).filterNot(visited.contains)
+          dfsHelper(neighbours ++ tail, visited + head, acc :+ head)
+        }
+    }
+  }
+  dfsHelper(Seq(start))
+}
 
-
-
-
-
-
+  println(dfs(g,0))
 
 }
 
