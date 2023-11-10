@@ -63,7 +63,8 @@ object AVLTreeApp extends App {
 
     override def balance: Tree[Nothing] = Empty
 
-    override def insert[B >: Nothing](newValue: B)(implicit ev: B => Ordered[B]): Tree[B] = ???
+    override def insert[B >: Nothing](newValue: B)(implicit ev: B => Ordered[B]): Tree[B] =
+      Node(newValue, Empty, Empty)
 
     override def inorder: Seq[Nothing] = Seq.empty[Nothing]
     override def preorder: Seq[Nothing] = Seq.empty[Nothing]
@@ -72,6 +73,70 @@ object AVLTreeApp extends App {
     override def levelorder: Seq[Nothing] = Seq.empty[Nothing]
   }
 
+  case class Node[A](value: A, left: Tree[A], right: Tree[A]) extends Tree[A] {
+    override def height: Int = 1 + Math.max(left.height, right.height)
+    override def balanceFactor: Int = left.height - right.height
 
+    override def rotateRight: Tree[A] = this match {
+      case Node(parent, l , Node(rv, rl,rr)) => Node(rv, Node(parent, l, rl), rr)
+    }
+
+    override def rotateLeft: Tree[A] = this match {
+      case Node(parent, Node(lv, ll , lr), r) => Node(lv, ll, Node(parent,lr, r))
+    }
+
+    override def rotateLeftRight: Tree[A] =
+      Node(left.value, left.rotateLeft, right).rotateRight
+
+    override def rotateRightLeft: Tree[A] =
+      Node(right.value, left, right.rotateRight).rotateLeft
+
+    override def balance: Tree[A] =
+      if (balanceFactor > 1) {
+        if(left.balanceFactor <= 0) rotateLeft else rotateLeftRight
+      } else if (balanceFactor < -1) {
+        if(right.balanceFactor >= 0) rotateRight else rotateRightLeft
+      } else this
+
+    override def insert[B >: A](newValue: B)(implicit ev: B => Ordered[B]): Tree[B] =
+      if(newValue < value) {
+        val newLeft = left.insert(newValue).balance
+        Node(value, newLeft, right)
+      } else if (newValue > value) {
+        val newRight = right.insert(newValue).balance
+        Node(value, left, newRight)
+      } else this
+
+    override def inorder: Seq[A] = left.inorder ++ Seq(value) ++ right.inorder
+    override def preorder: Seq[A] = Seq(value) ++ left.preorder ++ right.preorder
+    override def postorder: Seq[A] = left.postorder ++ right.postorder ++ Seq(value)
+
+    override def levelorder: Seq[A] = {
+      def loop(que: Seq[Tree[A]], acc: Seq[A] = Seq[A]()): Seq[A] = {
+        que match {
+          case Nil => acc
+          case head :: tail =>
+            head match {
+              case Empty => loop(tail,acc)
+              case Node(vl, left, right) =>
+                val newAcc = acc :+ vl
+                val newQue = tail ++ Seq(left,right)
+                loop(newQue, newAcc)
+            }
+        }
+      }
+      loop(Seq(this))
+    }
+  }
+
+  val avlTree =
+    Seq(10,5,20,15,25,12,4,50).foldLeft(Empty: Tree[Int])((avlT,v ) => avlT.insert(v))
+
+  println(avlTree)
+  println(avlTree.inorder)
+  println(avlTree.preorder)
+  println(avlTree.postorder)
+
+  println(avlTree.levelorder)
 
 }
